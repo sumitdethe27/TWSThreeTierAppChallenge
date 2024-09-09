@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: three-tier # The namespace where Prometheus will be deployed
+  labels:
+    app: prometheus
+spec:
+  replicas: 1 # Number of replicas
+  selector:
+    matchLabels:
+      app: prometheus # The label to match pods created by this deployment
+  template:
+    metadata:
+      labels:
+        app: prometheus # Ensures pods created by the deployment have this label
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus # Prometheus official image
+        ports:
+        - containerPort: 9090 # Prometheus default port
+        livenessProbe:
+          httpGet:
+            path: /-/healthy # Prometheus health endpoint for liveness probe
+            port: 9090
+          initialDelaySeconds: 30 # Wait before performing first probe
+          periodSeconds: 10 # Probe every 10 seconds
+        readinessProbe:
+          httpGet:
+            path: /-/ready # Prometheus readiness endpoint
+            port: 9090
+          initialDelaySeconds: 30 # Wait 30 seconds before first readiness check
+          periodSeconds: 10
+        volumeMounts:
+        - name: prometheus-config
+          mountPath: /etc/prometheus/prometheus.yml # Mount the Prometheus config
+      volumes:
+      - name: prometheus-config
+        configMap:
+          name: prometheus-config # Reference to a ConfigMap for configuration
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+  namespace: three-tier
+  labels:
+    app: prometheus
+spec:
+  type: ClusterIP # Expose internally within the cluster
+  ports:
+  - port: 9090 # Prometheus service port
+    targetPort: 9090
+  selector:
+    app: prometheus # Matches the app label for Prometheus pod

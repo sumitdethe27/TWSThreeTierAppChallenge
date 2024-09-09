@@ -1,0 +1,16 @@
+FROM node:14-alpine As build
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+RUN npm install --only=production
+
+COPY . .
+
+FROM node:14-alpine As final
+
+WORKDIR /usr/src/app
+
+COPY --from=build /usr/src/app /usr/src/app
+
+CMD ["node", "index.js"]

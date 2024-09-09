@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: three-tier
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    scrape_configs:
+      - job_name: 'kubernetes-apiservers'
+        kubernetes_sd_configs:
+          - role: endpoint
+        metrics_path: /metrics
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_label_k8s_app]
+            action: keep
+            regex: kubernetes-dashboard
+
+      - job_name: 'node'
+        static_configs:
+          - targets: ['node-exporter:9100']

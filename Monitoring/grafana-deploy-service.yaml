@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: three-tier # The namespace where Grafana will be deployed
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana # Official Grafana image
+        ports:
+        - containerPort: 3000 # Grafana's default port
+        livenessProbe:
+          httpGet:
+            path: /api/health # Grafana health endpoint for liveness
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health # Grafana readiness probe checks /api/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: three-tier
+  labels:
+    app: grafana
+spec:
+  type: ClusterIP # Internal service within the cluster
+  ports:
+  - port: 3000 # Grafana service port
+    targetPort: 3000
+  selector:
+    app: grafana

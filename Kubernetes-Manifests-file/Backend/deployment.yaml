@@ -21,11 +21,9 @@ spec:
       labels:
         role: api
     spec:
-      imagePullSecrets:
-      - name: ecr-registry-secret
       containers:
       - name: api
-        image: 407622020962.dkr.ecr.us-east-1.amazonaws.com/backend:latest
+        image: asia-south2-docker.pkg.dev/sylvan-terra-431011-h2-dev/test-dev-registry/backend:multistage
         imagePullPolicy: Always
         env:
           - name: MONGO_CONN_STR
